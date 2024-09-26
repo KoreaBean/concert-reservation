@@ -1,5 +1,6 @@
 package hello.concertreservation.common;
 
+import hello.concertreservation.dto.response.GetReservationSeatLockResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,5 +19,11 @@ public class ResponseDto {
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDto);
     }
+
+    public static ResponseEntity<ResponseDto> NotExistedCookie() {
+        ResponseDto result = new ResponseDto(ResponseCode.NOTEXISTED_COOKIE, ResponseMessage.NOTEXISTED_COOKIE);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+    }
+
 
 }

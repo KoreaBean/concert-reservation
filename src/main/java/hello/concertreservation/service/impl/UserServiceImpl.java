@@ -1,7 +1,7 @@
 package hello.concertreservation.service.impl;
 
 import hello.concertreservation.common.ResponseDto;
-import hello.concertreservation.cookie.CookieConst;
+import hello.concertreservation.management.cookie.CookieConst;
 import hello.concertreservation.dto.request.PostJoinRequestDto;
 import hello.concertreservation.dto.request.PostLoginRequestDto;
 import hello.concertreservation.dto.response.PostJoinResponseDto;
@@ -69,9 +69,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResponseEntity<? super PostLoginResponseDto> login(PostLoginRequestDto dto, HttpServletResponse response) {
-
+        log.info("UserService::login: 실행");
         UserEntity userEntity = new UserEntity();
         // 0. login 메서드 입장하는 조건 -> 쿠키 x or 쿠키 만료
+
 
         try {
             // 1. username 조회
@@ -92,7 +93,7 @@ public class UserServiceImpl implements UserService {
                 cookie.setMaxAge(60 * 5); // 3분
                 cookie.setHttpOnly(true);
                 response.addCookie(cookie);
-
+                log.info("UserService::login: cookie value={} , uuid={}",cookie.toString(),uuid);
                 // 5. 레디스 세션에 key 에 uuid , value 에 userEntity
                 String redisKey = "session::" + uuid;
                 redisTemplate.opsForValue().set(redisKey,userEntity,5,TimeUnit.MINUTES);

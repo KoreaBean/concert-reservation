@@ -1,25 +1,26 @@
-package hello.concertreservation.cookie;
+package hello.concertreservation.management.cookie;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
-
+@Component
 public class CookieManager {
 
 
-
-
-    public static Cookie findCookie(HttpServletRequest request, String loginCookieName) {
+    public Cookie findCookie(HttpServletRequest request, String findCookieName) {
 
         if (request.getCookies() == null){
             return null;
         }
 
         return Arrays.stream(request.getCookies())
-                .filter(cookie -> cookie.getName().equals(loginCookieName))
+                .filter(cookie -> cookie.getName().equals(findCookieName))
                 .findAny()
                 .orElse(null);
     }
+
+
 
 }

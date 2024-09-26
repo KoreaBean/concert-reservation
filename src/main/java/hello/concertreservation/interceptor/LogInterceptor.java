@@ -20,8 +20,6 @@ public class LogInterceptor implements HandlerInterceptor {
         String requestUrl = request.getRequestURI().toString();
         String uuid = UUID.randomUUID().toString();
 
-        String requestPassword = request.getParameter("password");
-        log.info("requestPassword = {}",requestPassword);
 
         log.info("REQUEST {} {} {}",uuid,requestUrl,handler);
         request.setAttribute(LOG_ID,uuid);

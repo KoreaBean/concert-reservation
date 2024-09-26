@@ -1,4 +1,4 @@
-package hello.concertreservation.cookie;
+package hello.concertreservation.management.cookie;
 
 public interface CookieConst {
 

@@ -1,27 +1,29 @@
 package hello.concertreservation.entity.user;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import hello.concertreservation.common.Sex;
+import hello.concertreservation.dto.request.PostConcertAddRequestDto;
 import hello.concertreservation.dto.request.PostJoinRequestDto;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import hello.concertreservation.entity.concert.ConcertEntity;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
 
 @Entity(name = "user")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class UserEntity {
+public class UserEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,6 +38,10 @@ public class UserEntity {
     private String phoneNumber;
     private String createAt;
 
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<ConcertEntity> concertList;
+
     public UserEntity(PostJoinRequestDto dto) {
         Date now = Date.from(Instant.now());
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -49,4 +55,11 @@ public class UserEntity {
         this.phoneNumber = dto.getPhoneNumber();;
         this.createAt = date;
     }
+
+    @Transactional
+    public void addConcert(PostConcertAddRequestDto dto) {
+        ConcertEntity concertEntity = new ConcertEntity(dto,this);
+        concertList.add(concertEntity);
+    }
+
 }

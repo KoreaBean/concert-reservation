@@ -1,4 +1,4 @@
-package hello.concertreservation.Session;
+package hello.concertreservation.management.Session;
 
 public interface SessionConst {
 
