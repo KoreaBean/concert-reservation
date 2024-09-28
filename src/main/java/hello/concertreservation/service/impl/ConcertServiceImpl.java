@@ -50,6 +50,7 @@ public class ConcertServiceImpl implements ConcertService {
 
     // 콘서트 등록
     @Override
+    @Transactional
     public ResponseEntity<? super PostConcertAddResponseDto> add(PostConcertAddRequestDto dto, HttpServletRequest request) {
         // 0. 콘서트 명, 콘서트 가수, 콘서트 오픈 날짜, 콘서트 마감 날짜, 콘서트 입장객수, 결제 비용,
         // 1. 리퀘스트의 userEntity를 찾아서 만든다음에 거기에 서 concert 정보 추가
@@ -68,52 +69,22 @@ public class ConcertServiceImpl implements ConcertService {
         return PostConcertAddResponseDto.succss();
     }
 
-    // 콘서트 예약 시작 시 좌석 잠금 메서드
-    @Override
-    public ResponseEntity<? super GetReservationSeatLockResponseDto> reservationSeatLock(Long concertId, Integer seatId, HttpServletRequest request) {
-        log.info("ConcertServiceImpl::reservationSeatLock:start");
-        UserEntity user;
-        try {
-            // 쿠키 검증
-            Cookie cookie = cookieManager.findCookie(request, CookieConst.LOGIN_COOKIE_NAME);
-            if (cookie == null){
-                return ResponseDto.NotExistedCookie();
-            }
-            // 2. 세션에서 쿠키 값 검증
-            user = sessionManager.findUser(cookie);
-            if (user ==  null){
-                return ResponseDto.NotExistedCookie();
-            }
-            // 좌석 임시 배정 여부
-            boolean isSuccess = redisManager.seatLock(concertId, seatId, user.getUserId());
-            if (!isSuccess) {
-                log.info("ConcertServiceImpl::reservationSeatLock:이미 배정된 좌석 입니다.");
-                return GetReservationSeatLockResponseDto.duplicatedSeat("이미 배정된 좌석 입니다.");
-            }
-        }catch (Exception e){
-            log.info("ConcertServiceImpl::reservationSeatLock:databaseError");
-            e.printStackTrace();
-            return ResponseDto.databaseError();
-        }
-        log.info("ConcertServiceImpl::reservationSeatLock:success");
-        // 5. success
-        return GetReservationSeatLockResponseDto.success();
-    }
-
 
     // 콘서트 예약 기능
     @Override
+    @Transactional
     public ResponseEntity<? super PostConcertReservationResponseDto> reservation(PostConcertReservationRequestDto dto, HttpServletRequest request) {
         log.info("ConcertServiceImpl::reservation:start");
-        // 1. 쿠키 값 가져와서 user entity 확보
-        Cookie cookie = cookieManager.findCookie(request, CookieConst.LOGIN_COOKIE_NAME);
-        // 2. dto 에서 콘서트 id 와 좌석 번호 가져오고
-        // 3. redis에 해당 좌석이 예매 되어 있는지 확인 -> 동일한 유저가 예약한 거라면 expire 없애기
+        // 유저 검증
+        UserEntity userEntity = checkUser(request);
+        if (userEntity == null){
+            return ResponseDto.NotExistedCookie();
+        }
+        // 1. 좌석 임시 잠금 메서드
+        Boolean isSuccess = reservationSeatLock(dto.getConcertId(),dto.getSeatId(),userEntity.getUserId());
+        // 2. 결제 메서드() 외부 API
 
-        // 4. 예매 되어 있다면 or rock 걸려 있다면 -> error 전송
-        // 5. 예매 되어 있지 않다면 -> redis 에 저장 하고 DB에도 저장
-        // 6. success
-
+        // 3. 좌석 확정 메서드 (concertId, userId)
 
         log.info("ConcertServiceImpl::reservation:success");
         return PostConcertReservationResponseDto.success();
@@ -129,12 +100,11 @@ public class ConcertServiceImpl implements ConcertService {
         UserEntity user;
 
         try {
-            // 0. 사용자 검증
-            Cookie cookie = cookieManager.findCookie(request, CookieConst.LOGIN_COOKIE_NAME);
-            user = sessionManager.findUser(cookie);
+            user = checkUser(request);
             if (user == null){
                 return ResponseDto.NotExistedCookie();
             }
+
             // 0. concert 검증
             Optional<ConcertEntity> concertId = concertRepository.findById(dto.getConcertId());
             if (concertId.isEmpty()){
@@ -174,6 +144,34 @@ public class ConcertServiceImpl implements ConcertService {
         // 4. success
         log.info("ConcertServiceImpl::reservationLimit:success");
         return PostConcertReservationLimitResponseDto.success();
+    }
+
+    private UserEntity checkUser(HttpServletRequest request) {
+        UserEntity user;
+        // 0. 사용자 검증
+        Cookie cookie = cookieManager.findCookie(request, CookieConst.LOGIN_COOKIE_NAME);
+        user = sessionManager.findUser(cookie);
+        return user;
+    }
+
+    // 콘서트 예약 시작 시 좌석 잠금 메서드
+    public boolean reservationSeatLock(Long concertId, Integer seatId, Long userId) {
+        log.info("ConcertServiceImpl::reservationSeatLock:start");
+        UserEntity user;
+        try {
+            // 좌석 임시 배정 여부
+            boolean isSuccess = redisManager.seatLock(concertId, seatId, user.getUserId());
+            if (!isSuccess) {
+                log.info("ConcertServiceImpl::reservationSeatLock:이미 배정된 좌석 입니다.");
+                return GetReservationSeatLockResponseDto.duplicatedSeat("이미 배정된 좌석 입니다.");
+            }
+        }catch (Exception e){
+            log.info("ConcertServiceImpl::reservationSeatLock:databaseError");
+            e.printStackTrace();
+            return ResponseDto.databaseError();
+        }
+        log.info("ConcertServiceImpl::reservationSeatLock:success");
+        // 5. success
     }
 
     // 콘서트 info 저장 메서드
