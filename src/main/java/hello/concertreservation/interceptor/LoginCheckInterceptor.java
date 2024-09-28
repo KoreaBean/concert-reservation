@@ -1,14 +1,12 @@
 package hello.concertreservation.interceptor;
 
 import hello.concertreservation.management.cookie.CookieConst;
-import hello.concertreservation.management.cookie.CookieManager;
+import hello.concertreservation.management.cookie.CookieManagerImpl;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Component;
 import org.springframework.util.PatternMatchUtils;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -16,13 +14,13 @@ import org.springframework.web.servlet.HandlerInterceptor;
 @Slf4j
 public class LoginCheckInterceptor implements HandlerInterceptor {
     private final RedisTemplate<String, String> redisTemplate;
-    private final CookieManager cookieManager;
+    private final CookieManagerImpl cookieManagerImpl;
 
     private static final String[] whitePath = {"/", "/login", "/logout","/join"};
 
-    public LoginCheckInterceptor(RedisTemplate<String, String> redisTemplate, CookieManager cookieManager) {
+    public LoginCheckInterceptor(RedisTemplate<String, String> redisTemplate, CookieManagerImpl cookieManagerImpl) {
         this.redisTemplate = redisTemplate;
-        this.cookieManager = cookieManager;
+        this.cookieManagerImpl = cookieManagerImpl;
     }
 
     @Override
@@ -35,13 +33,13 @@ public class LoginCheckInterceptor implements HandlerInterceptor {
         }
 
         // 쿠키 받고
-        Cookie findCookie = cookieManager.findCookie(request, CookieConst.LOGIN_COOKIE_NAME);
+        Cookie findCookie = cookieManagerImpl.findCookie(request, CookieConst.LOGIN_COOKIE_NAME);
 
         // 쿠키 없으면 false -> 로그인 화면으로 리다이렉트
         // 로그인 화면으로 이동 시키고 로그인 하면 원래 요청 페이지로 이동
         if (findCookie == null){
             log.info("쿠키 없는 사용자");
-            response.sendRedirect("/login?redirectURL="+requestURI);
+            response.sendRedirect("/login?error=다시+로그인+해주세요&redirectURL="+requestURI);
             return false;
         }
         // 받은 쿠키 name 을 레디스에서 조회
@@ -52,7 +50,7 @@ public class LoginCheckInterceptor implements HandlerInterceptor {
         if (!checkIfKeyExists(redisKey)){
             log.info("uuid가 일치하지 않습니다.");
             log.info("LoginCheckInterceptor:: cookie:uuid ={} , redis:uuid ={}",findCookie.getValue());
-            response.sendRedirect("/login?redirectURL="+requestURI);
+            response.sendRedirect("/login?error=다시+로그인+해주세요&redirectURL="+requestURI);
             return false;
         }
         log.info("LoginCheckInterceptor::preHandle: true");

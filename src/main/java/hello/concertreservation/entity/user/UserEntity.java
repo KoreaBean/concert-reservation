@@ -1,20 +1,20 @@
 package hello.concertreservation.entity.user;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import hello.concertreservation.common.Sex;
 import hello.concertreservation.dto.request.PostConcertAddRequestDto;
 import hello.concertreservation.dto.request.PostJoinRequestDto;
 import hello.concertreservation.entity.concert.ConcertEntity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -23,6 +23,7 @@ import java.util.List;
 @AllArgsConstructor
 @Getter
 @Setter
+@Slf4j
 public class UserEntity{
 
     @Id
@@ -39,8 +40,13 @@ public class UserEntity{
     private String createAt;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
-    private List<ConcertEntity> concertList;
+    @JsonIgnore
+    private List<ConcertEntity> concertList = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user",fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<ReservationEntity> reservationEntities = new ArrayList<>();
+
 
     public UserEntity(PostJoinRequestDto dto) {
         Date now = Date.from(Instant.now());
@@ -56,10 +62,27 @@ public class UserEntity{
         this.createAt = date;
     }
 
+
+
     @Transactional
-    public void addConcert(PostConcertAddRequestDto dto) {
-        ConcertEntity concertEntity = new ConcertEntity(dto,this);
-        concertList.add(concertEntity);
+    public void addReservation(ReservationEntity reservationEntity) {
+        log.info("UserEntity::addReservation:ReservationEtity={}",reservationEntity.toString());
+        reservationEntities.add(reservationEntity);
+        reservationEntity.setUser(this);
+
     }
 
+    @Override
+    public String toString() {
+        return "UserEntity{" +
+                "userId=" + userId +
+                ", username='" + username + '\'' +
+                ", password='" + password + '\'' +
+                ", name='" + name + '\'' +
+                ", age=" + age +
+                ", sex=" + sex +
+                ", phoneNumber='" + phoneNumber + '\'' +
+                ", createAt='" + createAt + '\'' +
+                '}';
+    }
 }

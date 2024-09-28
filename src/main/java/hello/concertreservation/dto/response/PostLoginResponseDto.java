@@ -21,12 +21,12 @@ public class PostLoginResponseDto extends ResponseDto {
 
 
     public static ResponseEntity<? super PostLoginResponseDto> notExistedUser(String message) {
-        ResponseDto result = new ResponseDto(ResponseCode.NOTEXISTED_USER, message);
+        ResponseDto result = new ResponseDto(ResponseCode.NOT_EXISTED_USER, message);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
     }
 
     public static ResponseEntity<? super PostLoginResponseDto> notExistedUsernameOrPassword(String message) {
-        ResponseDto result = new ResponseDto(ResponseCode.NOTEXISTED_USER_PASSWORD, message);
+        ResponseDto result = new ResponseDto(ResponseCode.NOT_EXISTED_USER_PASSWORD, message);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
     }
 }

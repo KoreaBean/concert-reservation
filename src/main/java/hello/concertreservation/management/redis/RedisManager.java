@@ -1,23 +1,16 @@
 package hello.concertreservation.management.redis;
 
-import hello.concertreservation.dto.response.GetReservationSeatLockResponseDto;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Component;
+public interface RedisManager {
 
-import java.util.concurrent.TimeUnit;
+    boolean seatLock(Long concertId, Integer seatId, Long userId);
 
-@Component
-@RequiredArgsConstructor
-public class RedisManager {
-    private final RedisTemplate<String, Object> redisTemplate;
-
-    // 좌석 임시 배정
-    public boolean seatLock(Integer concertId, Integer seatId, Long userId){
-
-        // 3. redis에 좌석 미배정인지 검증 -> 미배정이면 배정 해주고 3분간 rock
-        String redisSeatKey = "reservation::" + concertId +":" + seatId;
-        return Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(redisSeatKey, userId, 3, TimeUnit.MINUTES));
-    }
-
+    boolean reservation(Long concertId, Integer seatId, Long userId);
+    // 선착순 티켓 저장
+    Long reservationLimit(Long concertId, Integer quantity);
+    // 선착순 남은 티켓 확인
+    Long checkQuantity(Long concertId);
+    // 콘서트 선착순 예매 key 생성
+    void createReservationKey(Long concertId);
+    // 중복 로그인 이전 session 삭제
+    void deleteSessionKey(String uuid);
 }

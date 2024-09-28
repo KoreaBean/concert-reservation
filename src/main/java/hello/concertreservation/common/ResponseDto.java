@@ -1,9 +1,7 @@
 package hello.concertreservation.common;
 
-import hello.concertreservation.dto.response.GetReservationSeatLockResponseDto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -21,7 +19,11 @@ public class ResponseDto {
     }
 
     public static ResponseEntity<ResponseDto> NotExistedCookie() {
-        ResponseDto result = new ResponseDto(ResponseCode.NOTEXISTED_COOKIE, ResponseMessage.NOTEXISTED_COOKIE);
+        ResponseDto result = new ResponseDto(ResponseCode.NOT_EXISTED_COOKIE, ResponseMessage.NOT_EXISTED_COOKIE);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
+    }
+    public static ResponseEntity<ResponseDto> NotFound(String message){
+        ResponseDto result = new ResponseDto(ResponseCode.NOT_FOUNT, message);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(result);
     }
 

@@ -9,9 +9,11 @@ public interface ResponseCode {
     String DUPLICATED_SEAT = "DS";
     String DUPLICATED_PHONENUMBER = "DP";
     String DUPLICATED_USERNAME = "DU";
-    String NOTEXISTED_USER = "NU";
-    String NOTEXISTED_USER_PASSWORD = "NUP";
-    String NOTEXISTED_COOKIE = "NC";
+    String NOT_EXISTED_USER = "NU";
+    String NOT_EXISTED_USER_PASSWORD = "NUP";
+    String NOT_EXISTED_COOKIE = "NC";
+    String NOT_FOUNT = "NF";
+    String NOT_EXISTED_TICKET = "NT";
     // http 500
     String DATABASE_ERROR = "DBE";
 

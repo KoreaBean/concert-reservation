@@ -5,6 +5,7 @@ import hello.concertreservation.dto.request.PostLoginRequestDto;
 import hello.concertreservation.dto.response.PostJoinResponseDto;
 import hello.concertreservation.dto.response.PostLoginResponseDto;
 import hello.concertreservation.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -29,8 +30,8 @@ public class UserController {
 
     // 로그인
     @PostMapping("/login")
-    public ResponseEntity<? super PostLoginResponseDto> login(@RequestBody PostLoginRequestDto dto, HttpServletResponse response){
-        ResponseEntity<? super PostLoginResponseDto> result = userService.login(dto, response);
+    public ResponseEntity<? super PostLoginResponseDto> login(@RequestBody PostLoginRequestDto dto, HttpServletRequest request, HttpServletResponse response){
+        ResponseEntity<? super PostLoginResponseDto> result = userService.login(dto,request ,response);
         return result;
     }
 

@@ -7,9 +7,12 @@ import hello.concertreservation.dto.request.PostLoginRequestDto;
 import hello.concertreservation.dto.response.PostJoinResponseDto;
 import hello.concertreservation.dto.response.PostLoginResponseDto;
 import hello.concertreservation.entity.user.UserEntity;
+import hello.concertreservation.management.cookie.CookieManager;
+import hello.concertreservation.management.redis.RedisManager;
 import hello.concertreservation.repository.UserRepository;
 import hello.concertreservation.service.UserService;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +33,9 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final RedisTemplate<String, Object> redisTemplate;
+
+    private final CookieManager cookieManager;
+    private final RedisManager redisManager;
 
 
     // 회원가입
@@ -68,11 +74,19 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public ResponseEntity<? super PostLoginResponseDto> login(PostLoginRequestDto dto, HttpServletResponse response) {
+    public ResponseEntity<? super PostLoginResponseDto> login(PostLoginRequestDto dto, HttpServletRequest request, HttpServletResponse response) {
         log.info("UserService::login: 실행");
         UserEntity userEntity = new UserEntity();
         // 0. login 메서드 입장하는 조건 -> 쿠키 x or 쿠키 만료
 
+        // login 쿠키 를 가지고 있음에도 로그인 시도
+        Cookie findCookie = cookieManager.findCookie(request, CookieConst.LOGIN_COOKIE_NAME);
+        if (findCookie != null){
+            String cookieUUID = findCookie.getValue();
+            redisManager.deleteSessionKey(cookieUUID);
+            findCookie.setMaxAge(0);
+            response.addCookie(findCookie);
+        }
 
         try {
             // 1. username 조회
@@ -90,7 +104,7 @@ public class UserServiceImpl implements UserService {
                 String uuid = UUID.randomUUID().toString();
                 // 4. 쿠키 value 에 값 넣기
                 Cookie cookie = new Cookie(CookieConst.LOGIN_COOKIE_NAME,uuid);
-                cookie.setMaxAge(60 * 5); // 3분
+                cookie.setMaxAge(60 * 5); // 5분
                 cookie.setHttpOnly(true);
                 response.addCookie(cookie);
                 log.info("UserService::login: cookie value={} , uuid={}",cookie.toString(),uuid);
